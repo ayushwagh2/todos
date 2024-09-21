@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        /* Basic styling */
+    </style>
+</head>
+<body>
+    <h1>To-Do List</h1>
+    <ul id="todo-list"></ul>
+    <form id="todo-form">
+        <input type="text" id="title" placeholder="Title" required>
+        <input type="text" id="description" placeholder="Description" required>
+        <button type="submit">Add Todo</button>
+    </form>
+
+    <script>
+        const API_URL = '/todos';  // Points to Django API
+
+        async function fetchTodos() {
+            const response = await fetch(API_URL);
+            const todos = await response.json();
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            todos.forEach(todo => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${todo.title} - ${todo.description}`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteTodo(todo.id);
+                listItem.appendChild(deleteButton);
+                todoList.appendChild(listItem);
+            });
+        }
+
+        async function addTodo() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, description, completed: false })
+            });
+
+            if (response.ok) {
+                fetchTodos();
+            }
+        }
+
+        async function deleteTodo(id) {
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            fetchTodos();
+        }
+
+        document.getElementById('todo-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addTodo();
+        });
+
+        fetchTodos();
+    </script>
+</body>
+</html>
